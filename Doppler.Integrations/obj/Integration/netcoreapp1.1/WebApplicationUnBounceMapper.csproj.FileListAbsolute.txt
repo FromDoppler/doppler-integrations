@@ -1,0 +1,11 @@
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\bin\Integration\netcoreapp1.1\log4net.config
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\bin\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.deps.json
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\bin\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.runtimeconfig.json
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\bin\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.runtimeconfig.dev.json
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\bin\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.dll
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\bin\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.pdb
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\obj\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.csprojResolveAssemblyReference.cache
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\obj\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.csproj.CoreCompileInputs.cache
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\obj\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.AssemblyInfo.cs
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\obj\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.dll
+C:\Users\lpelizza\Documents\dopplerUnBounceMapper\WebApplicationUnBounceMapper\obj\Integration\netcoreapp1.1\WebApplicationUnBounceMapper.pdb

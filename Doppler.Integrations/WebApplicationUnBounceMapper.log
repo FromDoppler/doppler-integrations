@@ -1,0 +1,38 @@
+﻿2017-09-07 11:27:17,005 [4] ERROR Doppler.Integrations.Services.DopplerService - {
+  "status": 403,
+  "title": "Forbidden, wrong account",
+  "detail": "Your user nreal+freetest1@makingsense.com does not have access to account nreal freetest1@makingsense.com",
+  "errorCode": 1,
+  "type": "/docs/errors/403.1-forbiddenwrong-account",
+  "_links": [
+    {
+      "href": "/accounts/nreal freetest1@makingsense.com/fields",
+      "rel": "self"
+    },
+    {
+      "href": "/accounts/nreal%2Bfreetest1@makingsense.com",
+      "description": "Get account home.",
+      "rel": "/docs/rels/get-account-home"
+    }
+  ]
+}
+2017-09-07 11:27:17,537 [4] ERROR Doppler.Integrations.Controllers.UnbounceController - AccountName: $0 | ID_List: $1 | Status: Add subscriber has failed
+2017-09-07 11:30:26,010 [14] ERROR Doppler.Integrations.Services.DopplerService - {
+  "status": 403,
+  "title": "Forbidden, wrong account",
+  "detail": "Your user nreal+freetest1@makingsense.com does not have access to account nreal freetest1@makingsense.com",
+  "errorCode": 1,
+  "type": "/docs/errors/403.1-forbiddenwrong-account",
+  "_links": [
+    {
+      "href": "/accounts/nreal freetest1@makingsense.com/fields",
+      "rel": "self"
+    },
+    {
+      "href": "/accounts/nreal%2Bfreetest1@makingsense.com",
+      "description": "Get account home.",
+      "rel": "/docs/rels/get-account-home"
+    }
+  ]
+}
+2017-09-07 11:30:35,720 [14] ERROR Doppler.Integrations.Controllers.UnbounceController - AccountName: nreal freetest1@makingsense.com | ID_List: 1091202 | Status: Add subscriber has failed
