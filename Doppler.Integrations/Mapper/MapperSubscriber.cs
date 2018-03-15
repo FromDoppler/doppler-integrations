@@ -32,7 +32,7 @@ namespace Doppler.Integrations.Mapper
                 {
                     var type = allowedFields.Items[index].Type;
                     var value = entry.Value[0].ToString();
-                    if (type == FieldTypes.Boolean.Description())
+                    if (type == FieldTypes.Boolean.GetDescription())
                     {
                         value = GetBooleanValue(value);
                     }

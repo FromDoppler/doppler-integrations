@@ -17,13 +17,13 @@ namespace Doppler.Integrations.Mapper
 
     static class EnumExtensions
     {
-        public static string Description(this Enum value)
+        public static string GetDescription(this FieldTypes value)
         {
-            var enumType = value.GetType();
+            var enumType = typeof(FieldTypes);
             var field = enumType.GetField(value.ToString());
-            var attributes = field.GetCustomAttributes(typeof(DescriptionAttribute), false).Cast<object>().ToArray();
+            var attribute = field.GetCustomAttribute<DescriptionAttribute>();
 
-            return attributes.Length == 0 ? value.ToString() : ((DescriptionAttribute)attributes[0]).Description;
+            return attribute?.Description ?? value.ToString();
         }
     }
 }
