@@ -22,11 +22,22 @@ namespace Doppler.Integrations.Mapper
         public DopplerSubscriberDto ToDopplerSubscriberDto(IDictionary<string, IList<object>> rawSubscriber, ItemsDto allowedFields)
         {
             var email = GetEmailValue(rawSubscriber);
+            if (rawSubscriber.ContainsKey("email"))
+            {
+                email = rawSubscriber["email"][0].ToString();
+                rawSubscriber.Remove("email");
+            }
+            else
+            {
+                _log.LogWarning("The current user has not included an EMAIL field");
+            }
+
             var fieldsUpperNameAllowed = allowedFields.Items.Select(i => i.Name.ToUpper()).ToList();
             var fieldsNameAllowed = allowedFields.Items.Select(i => i.Name).ToList();
+
             var fields = new List<CustomeFieldDto>();
             var fieldsNotEnabled = new List<string>();
-			
+
             foreach (KeyValuePair<string, IList<object>> entry in rawSubscriber)
             {
                 var index = fieldsUpperNameAllowed.IndexOf(entry.Key.ToUpper());
