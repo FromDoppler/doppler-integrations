@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Doppler.Integrations.Helpers.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Text.RegularExpressions;
 
 namespace Doppler.Integrations.Services
 {
@@ -36,7 +37,8 @@ namespace Doppler.Integrations.Services
         public async Task<IActionResult> CreateNewSubscriberAsync(string apiKey, string accountName, long idList, DopplerSubscriberDto subscriber)
         {
             UpdateApiKey(apiKey);
-            
+            var responseErrorRegEx = new Regex("400\\.9|400\\.6");
+
             var url = _dopplerURLs.GetImportSubscriversURL(accountName, idList);
             var subscriberObjectString = new StringContent(JsonConvert.SerializeObject(subscriber), Encoding.UTF8, "application/json");
 
