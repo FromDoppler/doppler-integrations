@@ -19,6 +19,7 @@ namespace Doppler.Integrations.Services
         private readonly HttpClient _client;
         private readonly IDopplerURLs _dopplerURLs;
         private readonly ILogger _log;
+		private readonly Regex _cannotSuscribeErrorRegex = new Regex("\"type\": \"/docs/errors/400\\.[9|6]-");
 
         public DopplerService(IDopplerURLs dopplerURLs, ILogger<DopplerService> log)
         {
@@ -37,7 +38,6 @@ namespace Doppler.Integrations.Services
         public async Task<IActionResult> CreateNewSubscriberAsync(string apiKey, string accountName, long idList, DopplerSubscriberDto subscriber)
         {
             UpdateApiKey(apiKey);
-            var responseErrorRegEx = new Regex("400\\.9|400\\.6");
 
             var url = _dopplerURLs.GetImportSubscriversURL(accountName, idList);
             var subscriberObjectString = new StringContent(JsonConvert.SerializeObject(subscriber), Encoding.UTF8, "application/json");
@@ -45,19 +45,36 @@ namespace Doppler.Integrations.Services
             var response = await _client.PostAsync(url, subscriberObjectString);
             var responseBody = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode && !responseErrorRegEx.IsMatch(responseBody))
+            if (!response.IsSuccessStatusCode && !_cannotSuscribeErrorRegex.IsMatch(responseBody))
             {
                 _log.LogError(responseBody);
                 throw new Exception(responseBody);
             }
 
-            var contentResult = new ContentResult
-            {
-                Content = responseBody,
-                ContentType = response.Headers.ToString(),
-                StatusCode = (int)response.StatusCode
-            };
-            return new OkObjectResult(contentResult);
+			if (!response.IsSuccessStatusCode && _cannotSuscribeErrorRegex.IsMatch(responseBody))
+			{
+				// We introduced this patch because in these scenarios we do not want to send an error to unbounce
+				_log.LogError(responseBody);
+				var contentResult = new ContentResult
+				{
+					Content = responseBody,
+					ContentType = response.Headers.ToString(),
+					StatusCode = (int)response.StatusCode
+					// Maybe it will be necessary:
+					// StatusCode = 200
+				};
+				return new OkObjectResult(contentResult);
+			}
+			else
+			{
+				var contentResult = new ContentResult
+				{
+					Content = responseBody,
+					ContentType = response.Headers.ToString(),
+					StatusCode = (int)response.StatusCode
+				};
+				return new OkObjectResult(contentResult);
+			}
         }
 
         /// <inheritdoc/>
