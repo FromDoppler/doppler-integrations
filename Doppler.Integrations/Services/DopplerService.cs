@@ -45,7 +45,7 @@ namespace Doppler.Integrations.Services
             var response = await _client.PostAsync(url, subscriberObjectString);
             var responseBody = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode && !responseErrorRegEx.IsMatch(responseBody))
             {
                 _log.LogError(responseBody);
                 throw new Exception(responseBody);
