@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace Doppler.Integrations.Mapper
 {
-	public class CountryDictionary
+	public static class CountryDictionary
 	{
-		public readonly Dictionary<string, List<string>> CountryCodePairs = new Dictionary<string, List<string>>
+		public static readonly Dictionary<string, List<string>> CountriesByCode = new Dictionary<string, List<string>>
 		{
 			{"AD", new List<string> { "Andorra", "Andorra" } },
 			{"AE", new List<string> { "Emiratos Árabes Unidos", "United Arab Emirates" }},
@@ -248,5 +248,18 @@ namespace Doppler.Integrations.Mapper
 			{"YT", new List<string> { "Mayotte", "Mayotte" }},
 			{"ZA", new List<string> { "Sudáfrica", "South Africa" }}
 		};
+
+		public static readonly Dictionary<string, string> CountriesByFriendlyName;
+
+		static CountryDictionary()
+		{
+			CountriesByFriendlyName = CountriesByCode
+				.SelectMany(x => x.Value.Select(y => new { code = x.Key, friendlyName = y })
+				.Union(new[] { new { code = x.Key, friendlyName = x.Key } }))
+				.GroupBy(x => x.friendlyName)
+				.ToDictionary(x => x.Key, x => x.First().code, StringComparer.OrdinalIgnoreCase);
+		}
+		
 	}
+
 }

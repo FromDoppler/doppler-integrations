@@ -4,6 +4,7 @@ using System.Linq;
 using Doppler.Integrations.Mapper.Interfaces;
 using Doppler.Integrations.Models.Dtos;
 using System.Text.RegularExpressions;
+using System;
 
 namespace Doppler.Integrations.Mapper
 {
@@ -16,7 +17,7 @@ namespace Doppler.Integrations.Mapper
 		public MapperSubscriber(ILogger<MapperSubscriber> log)
         {
             _log = log;
-	}
+        }
 
         /// <inheritdoc/>
         public DopplerSubscriberDto ToDopplerSubscriberDto(IDictionary<string, IList<object>> rawSubscriber, ItemsDto allowedFields)
@@ -55,8 +56,10 @@ namespace Doppler.Integrations.Mapper
 					}
 					else if (COUNTRY_FIELD_NAMES.Contains(fieldsNameAllowed[index].ToUpper()))
 					{
-						CountryDictionary countryDictionary = new CountryDictionary();
-						value = countryDictionary.CountryCodePairs.FirstOrDefault(x => (x.Value[0] == value || x.Value[1] == value)).Key.ToUpper();
+						if (!CountryDictionary.CountriesByFriendlyName.TryGetValue(value, out value))
+						{
+							value = null;
+						}
 					}
 
 
@@ -97,8 +100,7 @@ namespace Doppler.Integrations.Mapper
 					return "M";
 				default:
 					return "N";
-			}
-							
+			}			
 		}
 
         private string GetBooleanValue(string value)
