@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Doppler.Integrations.Mapper
 {
-    public static class CountryDictionary
+    public static class Dictionaries
     {
         public static readonly Dictionary<string, List<string>> CountriesByCode = new Dictionary<string, List<string>>
         {
@@ -251,7 +251,7 @@ namespace Doppler.Integrations.Mapper
 
         public static readonly Dictionary<string, string> CountriesByFriendlyName;
 
-        static CountryDictionary()
+        static Dictionaries()
         {
             CountriesByFriendlyName = CountriesByCode
             .SelectMany(x => x.Value.Select(y => new { code = x.Key, friendlyName = y })
@@ -259,7 +259,30 @@ namespace Doppler.Integrations.Mapper
             .GroupBy(x => x.friendlyName)
             .ToDictionary(x => x.Key, x => x.First().code, StringComparer.OrdinalIgnoreCase);
         }
- 
+
+        public static readonly Dictionary<string, string> GenderByFriendlyName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "FEMENINO","F"},
+            { "FEMALE","F"},
+            { "MUJER","F"},
+            { "WOMAN","F"},
+            { "MASCULINO","M"},
+            { "MALE","M"},
+            { "HOMBRE","M"},
+            { "MAN","M"},
+        };
+
+        public static readonly Dictionary<string, string> BooleanValueByFriendlyName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "SI","true" },
+            { "YES","true" },
+            { "VERDADERO","true" },
+            { "TRUE","true" },
+            { "NO","false" },
+            { "FALSE","false" },
+            { "FALSO","false" }
+        };
+
     }
 
 }
