@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Doppler.Integrations.Helpers.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Text.RegularExpressions;
 
 namespace Doppler.Integrations.Services
 {
@@ -18,6 +19,7 @@ namespace Doppler.Integrations.Services
         private readonly HttpClient _client;
         private readonly IDopplerURLs _dopplerURLs;
         private readonly ILogger _log;
+		private readonly Regex _cannotSuscribeErrorRegex = new Regex("\"type\": \"/docs/errors/400\\.[9|6]-"); //Regex introduced to check which API response error we are getting
 
         public DopplerService(IDopplerURLs dopplerURLs, ILogger<DopplerService> log)
         {
@@ -32,31 +34,34 @@ namespace Doppler.Integrations.Services
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", apiKey);
         }
 
-        /// <inheritdoc/>
-        public async Task<IActionResult> CreateNewSubscriberAsync(string apiKey, string accountName, long idList, DopplerSubscriberDto subscriber)
-        {
-            UpdateApiKey(apiKey);
-            
-            var url = _dopplerURLs.GetImportSubscriversURL(accountName, idList);
-            var subscriberObjectString = new StringContent(JsonConvert.SerializeObject(subscriber), Encoding.UTF8, "application/json");
+		/// <inheritdoc/>
+		public async Task<IActionResult> CreateNewSubscriberAsync(string apiKey, string accountName, long idList, DopplerSubscriberDto subscriber)
+		{
+			UpdateApiKey(apiKey);
 
-            var response = await _client.PostAsync(url, subscriberObjectString);
-            var responseBody = await response.Content.ReadAsStringAsync();
+			var url = _dopplerURLs.GetImportSubscriversURL(accountName, idList);
+			var subscriberObjectString = new StringContent(JsonConvert.SerializeObject(subscriber), Encoding.UTF8, "application/json");
 
-            if (!response.IsSuccessStatusCode)
-            {
-                _log.LogError(responseBody);
-                throw new Exception(responseBody);
-            }
+			var response = await _client.PostAsync(url, subscriberObjectString);
+			var responseBody = await response.Content.ReadAsStringAsync();
 
-            var contentResult = new ContentResult
-            {
-                Content = responseBody,
-                ContentType = response.Headers.ToString(),
-                StatusCode = (int)response.StatusCode
-            };
-            return new OkObjectResult(contentResult);
-        }
+			// We introduced this patch because in these scenarios we do not want to send an error to unbounce
+			if (!response.IsSuccessStatusCode && !_cannotSuscribeErrorRegex.IsMatch(responseBody))
+			{
+				_log.LogError(responseBody);
+				throw new Exception(responseBody);
+			}
+
+			var contentResult = new ContentResult
+			{
+				Content = responseBody,
+				ContentType = response.Headers.ToString(),
+				StatusCode = (int)response.StatusCode
+			};
+			return new OkObjectResult(contentResult);
+			
+		}
+
 
         /// <inheritdoc/>
         public async Task<ItemsDto> GetFields(string apiKey, string accountName)
