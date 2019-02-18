@@ -12,8 +12,8 @@ namespace Doppler.Integrations.Mapper
     public class MapperSubscriber : IMapperSubscriber
     {
         private readonly ILogger _log;
-        private readonly string[] GENDER_FIELD_NAMES = new[] { "GENDER", "GENERO", "SEX", "SEXO" };
-        private readonly string[] COUNTRY_FIELD_NAMES = new[] { "PAIS", "COUNTRY"};
+        private readonly HashSet<string> GENDER_FIELD_NAMES = new HashSet<string>(new[] { "GENDER", "GENERO", "SEX", "SEXO" }, StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> COUNTRY_FIELD_NAMES = new HashSet<string>(new[] { "PAIS", "COUNTRY" }, StringComparer.OrdinalIgnoreCase);
         public MapperSubscriber(ILogger<MapperSubscriber> log)
         {
             _log = log;
@@ -50,16 +50,13 @@ namespace Doppler.Integrations.Mapper
                     {
 	                    value = GetBooleanValue(value);
                     }
-                    else if (GENDER_FIELD_NAMES.Contains(fieldsNameAllowed[index].ToUpper()))
+                    else if (GENDER_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
                     {
 	                    value = GetGenderValue(value);
                     }
-                    else if (COUNTRY_FIELD_NAMES.Contains(fieldsNameAllowed[index].ToUpper()))
+                    else if (COUNTRY_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
                     {
-	                    if (!CountryDictionary.CountriesByFriendlyName.TryGetValue(value, out value))
-	                    {
-		                    value = null;
-	                    }
+                        value = GetCountryValue(value);
                     }
 
                 var newCustomeField = new CustomeFieldDto { Name = fieldsNameAllowed[index], Value = value };
@@ -84,41 +81,35 @@ namespace Doppler.Integrations.Mapper
         }
 
         private string GetGenderValue(string genderValue)
-        {	
-            switch (genderValue.ToUpper())
+        {
+            string convertedGenderValue;
+            if (!Dictionaries.GenderByFriendlyName.TryGetValue(genderValue, out convertedGenderValue))
             {
-            case "FEMENINO":
-            case "MUJER":
-            case "FEMALE":
-            case "WOMAN":
-                return "F";
-            case "MASCULINO":
-            case "HOMBRE":
-            case "MALE":
-            case "MAN":
-            return "M";
-                default:
-                return "N";
-            }			
+                convertedGenderValue = null;
+            }
+            return convertedGenderValue;
         }
 
-        private string GetBooleanValue(string value)
+        private string GetBooleanValue(string booleanFieldValue)
         {
-            value = value.ToUpper();
-            switch (value)
+            string convertedBooleanFieldValue;
+            if (!Dictionaries.BooleanValueByFriendlyName.TryGetValue(booleanFieldValue, out convertedBooleanFieldValue))
             {
-            case "SI":
-            case "YES":
-            case "VERDADERO":
-            case "TRUE":
-                return "true";
-            case "NO":
-            case "FALSO":
-            case "FALSE":
-                return "false";
-            default:
-                return "";
+                convertedBooleanFieldValue = null;
             }
+            return convertedBooleanFieldValue;
+
+        }
+
+        private string GetCountryValue(string countryValue)
+        {
+            string convertedcountryValue;
+            if (!Dictionaries.CountriesByFriendlyName.TryGetValue(countryValue, out convertedcountryValue))
+            {
+                convertedcountryValue = null;
+            }
+            return convertedcountryValue;
+
         }
 
         private string GetEmailValue(IDictionary<string, IList<object>> rawSubscriber)
