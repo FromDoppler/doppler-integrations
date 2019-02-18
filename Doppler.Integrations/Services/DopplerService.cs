@@ -26,6 +26,7 @@ namespace Doppler.Integrations.Services
             _dopplerURLs = dopplerURLs;
             _client = new HttpClient();
             _client.DefaultRequestHeaders.Accept.Clear();
+            _client.DefaultRequestHeaders.Add("X-Doppler-Subscriber-Origin", "Unbounce");
             _log = log;
         }
 
