@@ -283,6 +283,21 @@ namespace Doppler.Integrations.Mapper
             { "FALSO","false" }
         };
 
+        public static readonly Dictionary<string, string> CustomFieldTypes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "text","string" },
+            { "yes_no","boolean" },
+            { "legal","permission" },
+            { "phone_number","phone" },
+            { "choice","string"},
+            { "multiple_choice","string"},
+            { "short_text","string"},
+            { "email","email"},
+            { "number","number"},
+            { "date","date"},
+            { "boolean","boolean"},
+            { "dropdown","string"}
+        };
     }
 
 }
