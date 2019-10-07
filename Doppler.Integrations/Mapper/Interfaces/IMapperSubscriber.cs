@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Doppler.Integrations.Models.Dtos;
+using Doppler.Integrations.Models.Dtos.Typeform;
 
 namespace Doppler.Integrations.Mapper.Interfaces
 {
@@ -15,5 +16,6 @@ namespace Doppler.Integrations.Mapper.Interfaces
         /// <param name="allowedFields"> List of allowed fields </param>
         /// <returns>a new DopplerSubscriberDto</returns>
         DopplerSubscriberDto ToDopplerSubscriberDto(IDictionary<string, IList<object>> rawSubscriber, ItemsDto allowedFields);
+        DopplerSubscriberDto TypeFormToSubscriberDTO(TypeformDTO subscriberDto, ItemsDto itemList);
     }
 }

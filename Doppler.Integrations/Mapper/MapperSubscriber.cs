@@ -5,6 +5,7 @@ using Doppler.Integrations.Mapper.Interfaces;
 using Doppler.Integrations.Models.Dtos;
 using System.Text.RegularExpressions;
 using System;
+using Doppler.Integrations.Models.Dtos.Typeform;
 
 namespace Doppler.Integrations.Mapper
 {
@@ -14,6 +15,8 @@ namespace Doppler.Integrations.Mapper
         private readonly ILogger _log;
         private readonly HashSet<string> GENDER_FIELD_NAMES = new HashSet<string>(new[] { "GENDER", "GENERO", "SEX", "SEXO" }, StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> COUNTRY_FIELD_NAMES = new HashSet<string>(new[] { "PAIS", "COUNTRY" }, StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> BASIC_FIELD_NAMES = new HashSet<string>(new[] { "FIRSTNAME", "GENDER", "COUNTRY", "BIRTHDAY", "LASTNAME" }, StringComparer.OrdinalIgnoreCase);
+
         public MapperSubscriber(ILogger<MapperSubscriber> log)
         {
             _log = log;
@@ -48,18 +51,18 @@ namespace Doppler.Integrations.Mapper
                     var value = entry.Value[0].ToString();
                     if (type == FieldTypes.Boolean.GetDescription())
                     {
-	                    value = GetBooleanValue(value);
+                        value = GetBooleanValue(value);
                     }
                     else if (GENDER_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
                     {
-	                    value = GetGenderValue(value);
+                        value = GetGenderValue(value);
                     }
                     else if (COUNTRY_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
                     {
                         value = GetCountryValue(value);
                     }
 
-                var newCustomeField = new CustomeFieldDto { Name = fieldsNameAllowed[index], Value = value };
+                    var newCustomeField = new CustomeFieldDto { Name = fieldsNameAllowed[index], Value = value };
                     fields.Add(newCustomeField);
                 }
                 else
@@ -140,5 +143,120 @@ namespace Doppler.Integrations.Mapper
             var warningDescription = string.Format("The following fields have been rejected because they are not allowed on Doppler's subscriber: $0", warningFields);
             _log.LogWarning(warningDescription);
         }
+
+        public DopplerSubscriberDto TypeFormToSubscriberDTO(TypeformDTO rawSubscriber, ItemsDto allowedFields)
+        {
+            DopplerSubscriberDto dopplerSubscriber = new DopplerSubscriberDto();
+            List<SimplifiedTypeformField> simplifiedFields = new List<SimplifiedTypeformField>();
+
+            simplifiedFields = SimplifyTypeformFields(rawSubscriber);
+            simplifiedFields = ChangeFieldsTypes(simplifiedFields);
+            dopplerSubscriber.Fields = MatchToDopplerFields(simplifiedFields, allowedFields);
+
+            dopplerSubscriber.Email = simplifiedFields
+                .Find(x => x.QuestionType == "email" && x.Name == "email" && !String.IsNullOrEmpty(x.Value.ToString()))
+                .Value
+                .ToString();
+
+            if (String.IsNullOrEmpty(dopplerSubscriber.Email))
+            {
+                _log.LogWarning(String.Format("The response event: {0} to the form: {1} with ID: {2} has not included an email", rawSubscriber.event_id, rawSubscriber.form_response.definition.title, rawSubscriber.form_response.definition.id));
+                throw new ArgumentNullException();
+            }
+
+            return dopplerSubscriber;
+
+        }
+
+        private IList<CustomeFieldDto> MatchToDopplerFields(List<SimplifiedTypeformField> simplifiedFields, ItemsDto allowedFields)
+        {
+            List<CustomeFieldDto> fieldsThatMatch = new List<CustomeFieldDto>();
+            //custom field section
+            fieldsThatMatch = simplifiedFields
+                .Where(x => allowedFields.Items
+                .Any(y => y.Name == x.Name && y.Type == x.QuestionType))
+                .Select(z=> new CustomeFieldDto()
+                {
+                    Name = z.Name,
+                    Value = z.Value
+                })
+                .ToList();
+            //basic field section
+            fieldsThatMatch
+                .AddRange(simplifiedFields
+                .Where(x => BASIC_FIELD_NAMES.Contains(x.Name))
+                .Select(y => new CustomeFieldDto()
+                {
+                    Name = y.Name.ToUpper(),
+                    Value = y.Value
+                }));
+            //aca tambien puedo usar linq revisar
+            foreach (CustomeFieldDto field in fieldsThatMatch)
+            {
+
+                if (GENDER_FIELD_NAMES.Contains(field.Name.ToString()))
+                {
+                    field.Value = GetGenderValue(field.Value.ToString());
+                }
+                else if (COUNTRY_FIELD_NAMES.Contains(field.Name.ToString()))
+                {
+                    field.Value = GetCountryValue(field.Value.ToString());
+                }
+            }
+            return fieldsThatMatch;
+        }
+
+        private List<SimplifiedTypeformField> ChangeFieldsTypes(List<SimplifiedTypeformField> simplifiedFields)
+        {
+
+            foreach (SimplifiedTypeformField field in simplifiedFields)
+            {
+                Dictionaries.CustomFieldTypes.TryGetValue(field.AnswerType, out string convertedAnswerType);
+                field.AnswerType = convertedAnswerType;
+                Dictionaries.CustomFieldTypes.TryGetValue(field.QuestionType, out string convertedQuestionType);
+                field.QuestionType = convertedQuestionType;
+            }
+
+            return simplifiedFields;
+        }
+
+        private List<SimplifiedTypeformField> SimplifyTypeformFields(TypeformDTO rawSubscriber)
+        {
+            List<SimplifiedTypeformField> simplifiedFields = new List<SimplifiedTypeformField>();
+
+            foreach (Field f in rawSubscriber.form_response.definition.fields)
+            {
+                string type = rawSubscriber.form_response.answers.Select(x => x.type).ToString();
+                simplifiedFields.Add(
+                    new SimplifiedTypeformField
+                    {
+                        Name = f.@ref,
+                        QuestionType = f.type,
+                        Id = f.id,
+                        AnswerType = rawSubscriber.form_response.answers.First(x => x.field.id == f.id && x.field.type != null).type,
+                        Value = GetAnswerValue(rawSubscriber.form_response.answers.First(x => x.field.id == f.id))
+                    });
+            }
+            return simplifiedFields;
+        }
+
+        private object GetAnswerValue(Answer answer)
+        {
+            IList<object> values = new List<object>();
+
+            values.Add(answer.email);
+            values.Add(answer.phone_number);
+            values.Add(answer.boolean);
+            values.Add(answer.number);
+            values.Add(answer.text);
+            values.Add(answer.date);
+            if(answer.choice != null)
+            {
+                values.Add(answer.choice.label);
+            }
+            return values.FirstOrDefault(x => x != null);
+        }
+
     }
 }
+   
