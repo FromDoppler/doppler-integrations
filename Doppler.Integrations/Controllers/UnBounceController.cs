@@ -43,7 +43,8 @@ namespace Doppler.Integrations.Controllers
             {
                 var itemList = await _dopplerService.GetFields(apiKey, accountN);
                 var subscriber = _mapper.ToDopplerSubscriberDto(subscriberDto.DataJSON, itemList);
-                var result = await _dopplerService.CreateNewSubscriberAsync(apiKey, accountN, idList, subscriber);
+                var origin = "Unbounce";
+                var result = await _dopplerService.CreateNewSubscriberAsync(apiKey, accountN, idList, subscriber,origin);
 
                 return result;
             }
