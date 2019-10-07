@@ -296,7 +296,8 @@ namespace Doppler.Integrations.Mapper
             { "number","number"},
             { "date","date"},
             { "boolean","boolean"},
-            { "dropdown","string"}
+            { "dropdown","string"},
+            { "opinion_scale","number"}
         };
     }
 
