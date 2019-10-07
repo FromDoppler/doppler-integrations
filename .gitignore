@@ -26,3 +26,4 @@
 /Doppler.Integrations/obj/Doppler.Integrations.csproj.nuget.cache
 /Doppler.Integrations/obj/Doppler.Integrations.csproj.nuget.g.props
 /Doppler.Integrations/obj/Doppler.Integrations.csproj.nuget.g.targets
+*/obj/*
