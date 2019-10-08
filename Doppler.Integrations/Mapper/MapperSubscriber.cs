@@ -39,7 +39,7 @@ namespace Doppler.Integrations.Mapper
             var fieldsUpperNameAllowed = allowedFields.Items.Select(i => i.Name.ToUpper()).ToList();
             var fieldsNameAllowed = allowedFields.Items.Select(i => i.Name).ToList();
 
-            var fields = new List<CustomeFieldDto>();
+            var fields = new List<CustomFieldDto>();
             var fieldsNotEnabled = new List<string>();
 
             foreach (KeyValuePair<string, IList<object>> entry in rawSubscriber)
@@ -62,7 +62,7 @@ namespace Doppler.Integrations.Mapper
                         value = GetCountryValue(value);
                     }
 
-                    var newCustomeField = new CustomeFieldDto { Name = fieldsNameAllowed[index], Value = value };
+                    var newCustomeField = new CustomFieldDto { Name = fieldsNameAllowed[index], Value = value };
                     fields.Add(newCustomeField);
                 }
                 else
@@ -168,41 +168,41 @@ namespace Doppler.Integrations.Mapper
 
         }
 
-        private IList<CustomeFieldDto> MatchToDopplerFields(List<SimplifiedTypeformField> simplifiedFields, ItemsDto allowedFields)
+        private IList<CustomFieldDto> MatchToDopplerFields(List<SimplifiedTypeformField> simplifiedFields, ItemsDto allowedFields)
         {
-            List<CustomeFieldDto> fieldsThatMatch = new List<CustomeFieldDto>();
             //custom field section
-            fieldsThatMatch = simplifiedFields
+            var fieldsThatMatch = simplifiedFields
                 .Where(x => allowedFields.Items
                 .Any(y => y.Name == x.Name && y.Type == x.QuestionType))
-                .Select(z=> new CustomeFieldDto()
+                .Select(z => new CustomFieldDto()
                 {
                     Name = z.Name,
                     Value = z.Value
                 })
                 .ToList();
+
             //basic field section
             fieldsThatMatch
                 .AddRange(simplifiedFields
                 .Where(x => BASIC_FIELD_NAMES.Contains(x.Name))
-                .Select(y => new CustomeFieldDto()
+                .Select(y => new CustomFieldDto()
                 {
                     Name = y.Name.ToUpper(),
                     Value = y.Value
                 }));
-            //aca tambien puedo usar linq revisar
-            foreach (CustomeFieldDto field in fieldsThatMatch)
-            {
 
-                if (GENDER_FIELD_NAMES.Contains(field.Name.ToString()))
-                {
-                    field.Value = GetGenderValue(field.Value.ToString());
-                }
-                else if (COUNTRY_FIELD_NAMES.Contains(field.Name.ToString()))
-                {
-                    field.Value = GetCountryValue(field.Value.ToString());
-                }
-            }
+            //transform gender and country fields values to doppler's codes for each
+
+            fieldsThatMatch
+                .Where(x=> GENDER_FIELD_NAMES.Contains(x.Name))
+                .Select(x => x.Value = GetGenderValue(x.Value.ToString()))
+                .ToList();
+
+            fieldsThatMatch
+                .Where(x => COUNTRY_FIELD_NAMES.Contains(x.Name))
+                .Select(x => x.Value = GetCountryValue(x.Value.ToString()))
+                .ToList();
+
             return fieldsThatMatch;
         }
 
