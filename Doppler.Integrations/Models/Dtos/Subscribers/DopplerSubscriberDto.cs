@@ -9,6 +9,6 @@ namespace Doppler.Integrations.Models.Dtos
         public string Email { get; set; }
 
         [JsonProperty(PropertyName = "fields")]
-        public IList<CustomeFieldDto> Fields { get; set; }
+        public IList<CustomFieldDto> Fields { get; set; }
     }
 }

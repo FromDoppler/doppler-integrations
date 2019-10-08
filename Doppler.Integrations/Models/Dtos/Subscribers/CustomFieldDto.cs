@@ -2,7 +2,7 @@
 
 namespace Doppler.Integrations.Models.Dtos
 {
-    public class CustomeFieldDto
+    public class CustomFieldDto
     {
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
