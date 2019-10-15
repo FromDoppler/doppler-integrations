@@ -30,13 +30,13 @@ namespace Doppler.Integrations.Controllers
             if (string.IsNullOrWhiteSpace(accountName))
             {
                 _log.LogError("Account Name should not be Null or empty");
-                return BadRequest();
+                return BadRequest("{\"ErrorMessage\":\"An account name must be provided\",\"HelpLink\":\"https://help.fromdoppler.com/en/how-integrate-doppler-typeform\"}");
             }
 
             if (string.IsNullOrWhiteSpace(apiKey))
             {
                 _log.LogError("API Key should not be Null or empty");
-                return BadRequest();
+                return BadRequest("{\"ErrorMessage\":\"An API Key must be provided\",\"HelpLink\":\"https://help.fromdoppler.com/en/how-integrate-doppler-typeform\"}");
             }
 
             var accountN = accountName.Replace(' ', '+');
