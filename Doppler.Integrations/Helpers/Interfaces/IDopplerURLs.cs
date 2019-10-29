@@ -5,6 +5,6 @@
     {
         string GetFieldListURL(string accountName);
 
-        string GetImportSubscriversURL(string accountName, long idList);
+        string GetImportSubscribersURL(string accountName, long idList);
     }
 }
