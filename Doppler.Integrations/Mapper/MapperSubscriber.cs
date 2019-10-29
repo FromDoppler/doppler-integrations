@@ -101,7 +101,6 @@ namespace Doppler.Integrations.Mapper
                 convertedBooleanFieldValue = null;
             }
             return convertedBooleanFieldValue;
-
         }
 
         private string GetCountryValue(string countryValue)
@@ -112,7 +111,6 @@ namespace Doppler.Integrations.Mapper
                 convertedcountryValue = null;
             }
             return convertedcountryValue;
-
         }
 
         private string GetEmailValue(IDictionary<string, IList<object>> rawSubscriber)
@@ -146,8 +144,14 @@ namespace Doppler.Integrations.Mapper
 
         public DopplerSubscriberDto TypeFormToSubscriberDTO(TypeformDTO rawSubscriber, ItemsDto allowedFields)
         {
-            DopplerSubscriberDto dopplerSubscriber = new DopplerSubscriberDto();
-            dopplerSubscriber.Email = rawSubscriber.form_response.answers.First(x => !String.IsNullOrEmpty(x.email)).email;
+            DopplerSubscriberDto dopplerSubscriber = new DopplerSubscriberDto
+            {
+                Email = rawSubscriber
+                .form_response
+                .answers
+                .FirstOrDefault(x => !String.IsNullOrEmpty(x.email))
+                .email
+            };
 
             if (String.IsNullOrEmpty(dopplerSubscriber.Email))
             {
@@ -155,10 +159,14 @@ namespace Doppler.Integrations.Mapper
                 throw new ArgumentNullException();
             }
 
-            var answersById = rawSubscriber.form_response.answers.Where(x=> String.IsNullOrEmpty(x.email) ).ToDictionary(y => y.field.id);
+            var answersById = rawSubscriber.form_response.answers
+                .Where(x=> String.IsNullOrEmpty(x.email) )
+                .ToDictionary(y => y.field.id);
 
-            dopplerSubscriber.Fields = rawSubscriber.form_response.definition.fields.Where(x=> x.type !="email" ).Select(f=>
-            {
+            dopplerSubscriber.Fields = rawSubscriber.form_response.definition.fields
+                .Where(x=> x.type !="email" )
+                .Select(f=>
+                {
                 var name = GENDER_FIELD_NAMES.Contains(f.@ref) ? "GENDER" 
                 : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? "COUNTRY"
                 : BASIC_FIELD_NAMES.Contains(f.@ref) ? f.@ref.ToUpper()
@@ -187,35 +195,39 @@ namespace Doppler.Integrations.Mapper
                     answersById,
                     value
                 };
-            })
-            .Where(y=> allowedFields.Items
-            .Any(z=> z.Name==y.name && y.questionType==z.Type))
-            .Select(h=> new CustomFieldDto
-            {
-                Name = h.name,
-                Value = h.value
-            })
-            .ToList();
+                })
+                .Where(y=> allowedFields.Items
+                .Any(z=> z.Name==y.name && y.questionType==z.Type))
+                .Select(h=> new CustomFieldDto
+                {
+                    Name = h.name,
+                    Value = h.value
+                })
+                .ToList();
 
             return dopplerSubscriber;
-
         }
 
         private object GetAnswerValue(Answer answer)
         {
-            IList<object> values = new List<object>();
+            object answerValue;
 
-            values.Add(answer.email);
-            values.Add(answer.phone_number);
-            values.Add(answer.boolean);
-            values.Add(answer.number);
-            values.Add(answer.text);
-            values.Add(answer.date);
-            if(answer.choice != null)
-            {
-                values.Add(answer.choice.label);
-            }
-            return values.First(x => x != null);
+            if (answer.phone_number != null)
+                answerValue = answer.phone_number;
+            else if (answer.boolean != null)
+                answerValue = answer.boolean;
+            else if (answer.number != null)
+                answerValue = answer.number;
+            else if (answer.text != null)
+                answerValue = answer.text;
+            else if (answer.date != null)
+                answerValue = answer.date;
+            else if (answer.choice != null)
+                answerValue = answer.choice.label;
+            else
+                answerValue = null;
+
+            return answerValue;
         }
     }
 }
