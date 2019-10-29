@@ -26,34 +26,40 @@ namespace Doppler.Integrations.Controllers
         [HttpPost]
         public async Task<IActionResult> AddSubscriber(string accountName, long idList, string apiKey, [FromBody] TypeformDTO subscriberDto)
         {
+            const string HELP_LINK = "https://help.fromdoppler.com/en/how-integrate-doppler-typeform";
 
             if (string.IsNullOrWhiteSpace(accountName))
             {
                 _log.LogError("Account Name should not be Null or empty");
-                return BadRequest("{\"ErrorMessage\":\"An account name must be provided\",\"HelpLink\":\"https://help.fromdoppler.com/en/how-integrate-doppler-typeform\"}");
+                return BadRequest(new
+                {
+                    ErrorMessage = "An account name must be provided",
+                    HelpLink = HELP_LINK
+                });
             }
-
             if (string.IsNullOrWhiteSpace(apiKey))
             {
                 _log.LogError("API Key should not be Null or empty");
-                return BadRequest("{\"ErrorMessage\":\"An API Key must be provided\",\"HelpLink\":\"https://help.fromdoppler.com/en/how-integrate-doppler-typeform\"}");
+                return BadRequest(new
+                {
+                    ErrorMessage = "An API key must be provided",
+                    HelpLink = HELP_LINK
+                });
             }
-
-            var accountN = accountName.Replace(' ', '+');
 
             try
             {
                 
-                var itemList = await _dopplerService.GetFields(apiKey, accountN);//we get the user's custom fields
+                var itemList = await _dopplerService.GetFields(apiKey, accountName);//we get the user's custom fields
                 var subscriber = _mapper.TypeFormToSubscriberDTO(subscriberDto, itemList);
-                var origin = "Typeform";
-                var result = await _dopplerService.CreateNewSubscriberAsync(apiKey, accountN, idList, subscriber,origin);
+                var requestOrigin = "Typeform";
+                var result = await _dopplerService.CreateNewSubscriberAsync(apiKey, accountName, idList, subscriber, requestOrigin);
 
                 return result;
             }
             catch (Exception ex)
             {
-                _log.LogError(new EventId(), ex, string.Format("AccountName: {0} | ID_List: {1} | Status: Add subscriber has failed", accountN, idList));
+                _log.LogError(new EventId(), ex, string.Format("AccountName: {0} | ID_List: {1} | Status: Add subscriber has failed", accountName, idList));
                 return new BadRequestResult();
             }
         }

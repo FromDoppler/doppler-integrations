@@ -25,16 +25,25 @@ namespace Doppler.Integrations.Controllers
         [HttpPost]
         public async Task<IActionResult> AddSubscriber(string accountName, long idList, string apiKey, [FromForm] UnbounceDto subscriberDto)
         {
+            const string HELP_LINK = "https://help.fromdoppler.com/en/how-integrate-doppler-unbounce";
+
             if (string.IsNullOrWhiteSpace(accountName))
             {
                 _log.LogError("Account Name should not be Null or empty");
-                return BadRequest("{\"ErrorMessage\":\"An account name must be provided\",\"HelpLink\":\"https://help.fromdoppler.com/en/how-integrate-doppler-typeform\"}");
+                return BadRequest(new
+                {
+                    ErrorMessage = "An account name must be provided",
+                    HelpLink = HELP_LINK
+                });
             }
-
             if (string.IsNullOrWhiteSpace(apiKey))
             {
                 _log.LogError("API Key should not be Null or empty");
-                return BadRequest("{\"ErrorMessage\":\"An API Key must be provided\",\"HelpLink\":\"https://help.fromdoppler.com/en/how-integrate-doppler-typeform\"}");
+                return BadRequest(new
+                {
+                    ErrorMessage = "An API key must be provided",
+                    HelpLink = HELP_LINK
+                });
             }
 
             var accountN = accountName.Replace(' ', '+');
@@ -43,8 +52,8 @@ namespace Doppler.Integrations.Controllers
             {
                 var itemList = await _dopplerService.GetFields(apiKey, accountN);
                 var subscriber = _mapper.ToDopplerSubscriberDto(subscriberDto.DataJSON, itemList);
-                var origin = "Unbounce";
-                var result = await _dopplerService.CreateNewSubscriberAsync(apiKey, accountN, idList, subscriber,origin);
+                var requestOrigin = "Unbounce";
+                var result = await _dopplerService.CreateNewSubscriberAsync(apiKey, accountN, idList, subscriber, requestOrigin);
 
                 return result;
             }
