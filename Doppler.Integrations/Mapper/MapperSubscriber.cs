@@ -147,10 +147,10 @@ namespace Doppler.Integrations.Mapper
             DopplerSubscriberDto dopplerSubscriber = new DopplerSubscriberDto
             {
                 Email = rawSubscriber
-                .form_response
-                .answers
-                .FirstOrDefault(x => !String.IsNullOrEmpty(x.email))
-                .email
+                    .form_response
+                    .answers
+                    .FirstOrDefault(x => !String.IsNullOrEmpty(x.email))
+                    .email
             };
 
             if (String.IsNullOrEmpty(dopplerSubscriber.Email))
@@ -160,50 +160,50 @@ namespace Doppler.Integrations.Mapper
             }
 
             var answersById = rawSubscriber.form_response.answers
-                .Where(x=> String.IsNullOrEmpty(x.email) )
-                .ToDictionary(y => y.field.id);
+                    .Where(x=> String.IsNullOrEmpty(x.email) )
+                    .ToDictionary(y => y.field.id);
 
             dopplerSubscriber.Fields = rawSubscriber.form_response.definition.fields
-                .Where(x=> x.type !="email" )
-                .Select(f=>
-                {
-                var name = GENDER_FIELD_NAMES.Contains(f.@ref) ? "GENDER" 
-                : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? "COUNTRY"
-                : BASIC_FIELD_NAMES.Contains(f.@ref) ? f.@ref.ToUpper()
-                : f.@ref;
+                    .Where(x=> x.type != "email" )
+                    .Select(f=>
+                    {
+                    var name = GENDER_FIELD_NAMES.Contains(f.@ref) ? "GENDER" 
+                        : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? "COUNTRY"
+                        : BASIC_FIELD_NAMES.Contains(f.@ref) ? f.@ref.ToUpper()
+                        : f.@ref;
 
-                var questionType = GENDER_FIELD_NAMES.Contains(f.@ref) ? "gender"
-                : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? "country"
-                : f.@ref == "consent" ? "consent"
-                : Dictionaries.CustomFieldTypes.TryGetValue(f.type, out string convertedQuestionType) ? convertedQuestionType
-                : null;
+                    var questionType = GENDER_FIELD_NAMES.Contains(f.@ref) ? "gender"
+                        : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? "country"
+                        : f.@ref == "consent" ? "consent"
+                        : Dictionaries.CustomFieldTypes.TryGetValue(f.type, out string convertedQuestionType) ? convertedQuestionType
+                        : null;
 
-                var answerType = Dictionaries.CustomFieldTypes.TryGetValue(answersById[f.id].field.type, out string convertedAnswerType) ? convertedAnswerType
-                : null;
+                    var answerType = Dictionaries.CustomFieldTypes.TryGetValue(answersById[f.id].field.type, out string convertedAnswerType) ? convertedAnswerType
+                        : null;
 
-                var answerValue = GetAnswerValue(answersById[f.id]);
+                    var answerValue = GetAnswerValue(answersById[f.id]);
 
-                var value = GENDER_FIELD_NAMES.Contains(f.@ref) ? GetGenderValue(answerValue.ToString())
-                    : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? GetCountryValue(answerValue.ToString())
-                    : answerValue;
+                    var value = GENDER_FIELD_NAMES.Contains(f.@ref) ? GetGenderValue(answerValue.ToString())
+                        : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? GetCountryValue(answerValue.ToString())
+                        : answerValue;
 
-                return new
-                {
-                    name,
-                    questionType,
-                    f.id,
-                    answersById,
-                    value
-                };
-                })
-                .Where(y=> allowedFields.Items
-                .Any(z=> z.Name==y.name && y.questionType==z.Type))
-                .Select(h=> new CustomFieldDto
-                {
-                    Name = h.name,
-                    Value = h.value
-                })
-                .ToList();
+                    return new
+                    {
+                        name,
+                        questionType,
+                        f.id,
+                        answersById,
+                        value
+                    };
+                    })
+                    .Where(y=> allowedFields.Items
+                    .Any(z=> z.Name == y.name && y.questionType == z.Type))
+                    .Select(h=> new CustomFieldDto
+                    {
+                        Name = h.name,
+                        Value = h.value
+                    })
+                    .ToList();
 
             return dopplerSubscriber;
         }

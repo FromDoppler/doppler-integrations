@@ -50,7 +50,7 @@ namespace Doppler.Integrations.Controllers
             try
             {
                 
-                var itemList = await _dopplerService.GetFields(apiKey, accountName);//we get the user's custom fields
+                var itemList = await _dopplerService.GetFields(apiKey, accountName); //we get the user's custom fields
                 var subscriber = _mapper.TypeFormToSubscriberDTO(subscriberDto, itemList);
                 var requestOrigin = "Typeform";
                 var result = await _dopplerService.CreateNewSubscriberAsync(apiKey, accountName, idList, subscriber, requestOrigin);
