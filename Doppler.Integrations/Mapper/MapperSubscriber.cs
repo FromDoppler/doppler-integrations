@@ -156,7 +156,7 @@ namespace Doppler.Integrations.Mapper
             if (String.IsNullOrEmpty(dopplerSubscriber.Email))
             {
                 _log.LogWarning(String.Format("The response event: {0} to the form: {1} with ID: {2} has not included an email", rawSubscriber.event_id, rawSubscriber.form_response.definition.title, rawSubscriber.form_response.definition.id));
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(dopplerSubscriber.Email));
             }
 
             var answersById = rawSubscriber.form_response.answers
