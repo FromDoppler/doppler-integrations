@@ -26,7 +26,6 @@ namespace Doppler.Integrations.Services
             _dopplerURLs = dopplerURLs;
             _client = new HttpClient();
             _client.DefaultRequestHeaders.Accept.Clear();
-            _client.DefaultRequestHeaders.Add("X-Doppler-Subscriber-Origin", "Unbounce");
             _log = log;
         }
 
@@ -36,17 +35,27 @@ namespace Doppler.Integrations.Services
         }
 
         /// <inheritdoc/>
-        public async Task<IActionResult> CreateNewSubscriberAsync(string apiKey, string accountName, long idList, DopplerSubscriberDto subscriber)
+        public async Task<IActionResult> CreateNewSubscriberAsync(string apiKey, string accountName, long idList, DopplerSubscriberDto subscriber, string origin)
         {
             UpdateApiKey(apiKey);
 
-            var url = _dopplerURLs.GetImportSubscriversURL(accountName, idList);
             var subscriberObjectString = new StringContent(JsonConvert.SerializeObject(subscriber), Encoding.UTF8, "application/json");
 
-            var response = await _client.PostAsync(url, subscriberObjectString);
+            HttpRequestMessage requestToDoppler = new HttpRequestMessage
+            {
+                RequestUri = new Uri(_dopplerURLs.GetImportSubscribersURL(accountName, idList)),
+                Content = new StringContent(JsonConvert.SerializeObject(subscriber), Encoding.UTF8, "application/json"),
+                Method = HttpMethod.Post
+            };
+
+            requestToDoppler.Headers.Add("X-Doppler-Subscriber-Origin", origin);
+            requestToDoppler.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response= await _client.SendAsync(requestToDoppler);
+
             var responseBody = await response.Content.ReadAsStringAsync();
 
-            // We introduced this patch because in these scenarios we do not want to send an error to unbounce
+            // We introduced this patch because in these scenarios we do not want to send an error to the integrations
             if (!response.IsSuccessStatusCode && !_cannotSuscribeErrorRegex.IsMatch(responseBody))
             {
                 _log.LogError(responseBody);

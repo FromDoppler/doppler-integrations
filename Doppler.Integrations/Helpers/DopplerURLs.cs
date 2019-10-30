@@ -15,7 +15,7 @@ namespace Doppler.Integrations.Helpers
 
         private string BaseURL { get; set; }
 
-        public string GetImportSubscriversURL(string accountName, long idList)
+        public string GetImportSubscribersURL(string accountName, long idList)
         {
             var url = BaseURL + string.Format(IMPORT_SUBSCRIBERS_URL, accountName, idList.ToString());
             return url;

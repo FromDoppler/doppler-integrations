@@ -1,21 +1,22 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
-using Doppler.Integrations.Models.Dtos.Unbounce;
+using Doppler.Integrations.Models.Dtos.Typeform;
 using System.Threading.Tasks;
 using Doppler.Integrations.Mapper.Interfaces;
 using Doppler.Integrations.Services.Interfaces;
 
+
 namespace Doppler.Integrations.Controllers
 {
     [Route("api/[controller]")]
-    public class UnbounceController : Controller
+    public class TypeformController : Controller
     {
         private readonly IDopplerService _dopplerService;
         private readonly IMapperSubscriber _mapper;
         private readonly ILogger _log;
 
-        public UnbounceController(IDopplerService dopplerService, IMapperSubscriber mapper, ILogger<UnbounceController> log)
+        public TypeformController(IDopplerService dopplerService, IMapperSubscriber mapper, ILogger<TypeformController> log)
         {
             _dopplerService = dopplerService;
             _mapper = mapper;
@@ -23,9 +24,9 @@ namespace Doppler.Integrations.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddSubscriber(string accountName, long idList, string apiKey, [FromForm] UnbounceDto subscriberDto)
+        public async Task<IActionResult> AddSubscriber(string accountName, long idList, string apiKey, [FromBody] TypeformDTO subscriberDto)
         {
-            const string HELP_LINK = "https://help.fromdoppler.com/en/how-integrate-doppler-unbounce";
+            const string HELP_LINK = "https://help.fromdoppler.com/en/how-integrate-doppler-typeform";
 
             if (string.IsNullOrWhiteSpace(accountName))
             {
@@ -46,20 +47,19 @@ namespace Doppler.Integrations.Controllers
                 });
             }
 
-            var accountN = accountName.Replace(' ', '+');
-
             try
             {
-                var itemList = await _dopplerService.GetFields(apiKey, accountN);
-                var subscriber = _mapper.ToDopplerSubscriberDto(subscriberDto.DataJSON, itemList);
-                var requestOrigin = "Unbounce";
-                var result = await _dopplerService.CreateNewSubscriberAsync(apiKey, accountN, idList, subscriber, requestOrigin);
+                
+                var itemList = await _dopplerService.GetFields(apiKey, accountName); //we get the user's custom fields
+                var subscriber = _mapper.TypeFormToSubscriberDTO(subscriberDto, itemList);
+                var requestOrigin = "Typeform";
+                var result = await _dopplerService.CreateNewSubscriberAsync(apiKey, accountName, idList, subscriber, requestOrigin);
 
                 return result;
             }
             catch (Exception ex)
             {
-                _log.LogError(new EventId(), ex, string.Format("AccountName: {0} | ID_List: {1} | Status: Add subscriber has failed", accountN, idList));
+                _log.LogError(new EventId(), ex, string.Format("AccountName: {0} | ID_List: {1} | Status: Add subscriber has failed", accountName, idList));
                 return new BadRequestResult();
             }
         }

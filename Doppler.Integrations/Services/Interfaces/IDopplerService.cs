@@ -14,7 +14,7 @@ namespace Doppler.Integrations.Services.Interfaces
         /// <param name="idList"> Id of the list that we want to include a new subscriber. </param>
         /// <param name="subscriber">Subscriber to be included. </param>
         /// <returns> An Action Result with the status of the operation. </returns>
-        Task<IActionResult> CreateNewSubscriberAsync(string apiKey, string accountName, long idList, DopplerSubscriberDto subscriber);
+        Task<IActionResult> CreateNewSubscriberAsync(string apiKey, string accountName, long idList, DopplerSubscriberDto subscriber, string origin);
 
         /// <summary>
         /// Get a list of allowed fields by an Account.

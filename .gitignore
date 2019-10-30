@@ -1,0 +1,8 @@
+/Doppler.Integrations/WebApplicationUnBounceMapper.log
+*/bin/*
+*/obj/*
+**/.vs/**
+*.suo
+*.user
+*.sln.docstates
+*.log

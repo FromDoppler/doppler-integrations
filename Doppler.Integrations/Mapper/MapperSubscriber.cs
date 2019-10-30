@@ -5,6 +5,7 @@ using Doppler.Integrations.Mapper.Interfaces;
 using Doppler.Integrations.Models.Dtos;
 using System.Text.RegularExpressions;
 using System;
+using Doppler.Integrations.Models.Dtos.Typeform;
 
 namespace Doppler.Integrations.Mapper
 {
@@ -14,6 +15,8 @@ namespace Doppler.Integrations.Mapper
         private readonly ILogger _log;
         private readonly HashSet<string> GENDER_FIELD_NAMES = new HashSet<string>(new[] { "GENDER", "GENERO", "SEX", "SEXO" }, StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> COUNTRY_FIELD_NAMES = new HashSet<string>(new[] { "PAIS", "COUNTRY" }, StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> BASIC_FIELD_NAMES = new HashSet<string>(new[] { "FIRSTNAME", "GENDER", "COUNTRY", "BIRTHDAY", "LASTNAME" , "CONSENT"}, StringComparer.OrdinalIgnoreCase);
+
         public MapperSubscriber(ILogger<MapperSubscriber> log)
         {
             _log = log;
@@ -36,7 +39,7 @@ namespace Doppler.Integrations.Mapper
             var fieldsUpperNameAllowed = allowedFields.Items.Select(i => i.Name.ToUpper()).ToList();
             var fieldsNameAllowed = allowedFields.Items.Select(i => i.Name).ToList();
 
-            var fields = new List<CustomeFieldDto>();
+            var fields = new List<CustomFieldDto>();
             var fieldsNotEnabled = new List<string>();
 
             foreach (KeyValuePair<string, IList<object>> entry in rawSubscriber)
@@ -48,18 +51,18 @@ namespace Doppler.Integrations.Mapper
                     var value = entry.Value[0].ToString();
                     if (type == FieldTypes.Boolean.GetDescription())
                     {
-	                    value = GetBooleanValue(value);
+                        value = GetBooleanValue(value);
                     }
                     else if (GENDER_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
                     {
-	                    value = GetGenderValue(value);
+                        value = GetGenderValue(value);
                     }
                     else if (COUNTRY_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
                     {
                         value = GetCountryValue(value);
                     }
 
-                var newCustomeField = new CustomeFieldDto { Name = fieldsNameAllowed[index], Value = value };
+                    var newCustomeField = new CustomFieldDto { Name = fieldsNameAllowed[index], Value = value };
                     fields.Add(newCustomeField);
                 }
                 else
@@ -98,7 +101,6 @@ namespace Doppler.Integrations.Mapper
                 convertedBooleanFieldValue = null;
             }
             return convertedBooleanFieldValue;
-
         }
 
         private string GetCountryValue(string countryValue)
@@ -109,7 +111,6 @@ namespace Doppler.Integrations.Mapper
                 convertedcountryValue = null;
             }
             return convertedcountryValue;
-
         }
 
         private string GetEmailValue(IDictionary<string, IList<object>> rawSubscriber)
@@ -140,5 +141,94 @@ namespace Doppler.Integrations.Mapper
             var warningDescription = string.Format("The following fields have been rejected because they are not allowed on Doppler's subscriber: $0", warningFields);
             _log.LogWarning(warningDescription);
         }
+
+        public DopplerSubscriberDto TypeFormToSubscriberDTO(TypeformDTO rawSubscriber, ItemsDto allowedFields)
+        {
+            DopplerSubscriberDto dopplerSubscriber = new DopplerSubscriberDto
+            {
+                Email = rawSubscriber
+                    .form_response
+                    .answers
+                    .FirstOrDefault(x => !String.IsNullOrEmpty(x.email))
+                    .email
+            };
+
+            if (String.IsNullOrEmpty(dopplerSubscriber.Email))
+            {
+                _log.LogWarning(String.Format("The response event: {0} to the form: {1} with ID: {2} has not included an email", rawSubscriber.event_id, rawSubscriber.form_response.definition.title, rawSubscriber.form_response.definition.id));
+                throw new ArgumentNullException(nameof(dopplerSubscriber.Email));
+            }
+
+            var answersById = rawSubscriber.form_response.answers
+                    .Where(x=> String.IsNullOrEmpty(x.email) )
+                    .ToDictionary(y => y.field.id);
+
+            dopplerSubscriber.Fields = rawSubscriber.form_response.definition.fields
+                    .Where(x=> x.type != "email" )
+                    .Select(f=>
+                    {
+                    var name = GENDER_FIELD_NAMES.Contains(f.@ref) ? "GENDER" 
+                        : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? "COUNTRY"
+                        : BASIC_FIELD_NAMES.Contains(f.@ref) ? f.@ref.ToUpper()
+                        : f.@ref;
+
+                    var questionType = GENDER_FIELD_NAMES.Contains(f.@ref) ? "gender"
+                        : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? "country"
+                        : f.@ref == "consent" ? "consent"
+                        : Dictionaries.CustomFieldTypes.TryGetValue(f.type, out string convertedQuestionType) ? convertedQuestionType
+                        : null;
+
+                    var answerType = Dictionaries.CustomFieldTypes.TryGetValue(answersById[f.id].field.type, out string convertedAnswerType) ? convertedAnswerType
+                        : null;
+
+                    var answerValue = GetAnswerValue(answersById[f.id]);
+
+                    var value = GENDER_FIELD_NAMES.Contains(f.@ref) ? GetGenderValue(answerValue.ToString())
+                        : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? GetCountryValue(answerValue.ToString())
+                        : answerValue;
+
+                    return new
+                    {
+                        name,
+                        questionType,
+                        f.id,
+                        answersById,
+                        value
+                    };
+                    })
+                    .Where(y=> allowedFields.Items
+                    .Any(z=> z.Name == y.name && y.questionType == z.Type))
+                    .Select(h=> new CustomFieldDto
+                    {
+                        Name = h.name,
+                        Value = h.value
+                    })
+                    .ToList();
+
+            return dopplerSubscriber;
+        }
+
+        private object GetAnswerValue(Answer answer)
+        {
+            object answerValue;
+
+            if (answer.phone_number != null)
+                answerValue = answer.phone_number;
+            else if (answer.boolean != null)
+                answerValue = answer.boolean;
+            else if (answer.number != null)
+                answerValue = answer.number;
+            else if (answer.text != null)
+                answerValue = answer.text;
+            else if (answer.date != null)
+                answerValue = answer.date;
+            else if (answer.choice != null)
+                answerValue = answer.choice.label;
+            else
+                answerValue = null;
+
+            return answerValue;
+        }
     }
 }
+   
