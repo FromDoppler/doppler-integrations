@@ -9,5 +9,6 @@ namespace Doppler.Integrations.Models.Dtos.Typeform
     {
         public Definition definition { get; set; }
         public List<Answer> answers { get; set; }
+        public Hidden hidden { get; set; }
     }
 }
