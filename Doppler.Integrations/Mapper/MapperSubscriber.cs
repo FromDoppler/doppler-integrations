@@ -6,6 +6,7 @@ using Doppler.Integrations.Models.Dtos;
 using System.Text.RegularExpressions;
 using System;
 using Doppler.Integrations.Models.Dtos.Typeform;
+using System.Text;
 
 namespace Doppler.Integrations.Mapper
 {
@@ -144,21 +145,25 @@ namespace Doppler.Integrations.Mapper
 
         public DopplerSubscriberDto TypeFormToSubscriberDTO(TypeformDTO rawSubscriber, ItemsDto allowedFields)
         {
-            DopplerSubscriberDto dopplerSubscriber = new DopplerSubscriberDto
-            {
-                Email = rawSubscriber
-                    .form_response
-                    .answers
-                    .FirstOrDefault(x => !String.IsNullOrEmpty(x.email))
-                    .email
-            };
+            var rawSubscriberEmail = rawSubscriber.form_response.answers.FirstOrDefault(x => !string.IsNullOrEmpty(x.email));
 
-            if (String.IsNullOrEmpty(dopplerSubscriber.Email))
+            if ((rawSubscriberEmail == null)
+                && string.IsNullOrEmpty(rawSubscriber.form_response.hidden.dplrid))
             {
-                _log.LogWarning(String.Format("The response event: {0} to the form: {1} with ID: {2} has not included an email", rawSubscriber.event_id, rawSubscriber.form_response.definition.title, rawSubscriber.form_response.definition.id));
-                throw new ArgumentNullException(nameof(dopplerSubscriber.Email));
+                var responseText = string.Format("The response event: {0} to the form: {1} with ID: {2} has not included an email", rawSubscriber.event_id, rawSubscriber.form_response.definition.title, rawSubscriber.form_response.definition.id);
+                _log.LogWarning(responseText);
+                throw new ArgumentNullException(responseText);
             }
 
+            var emailSuscriber = rawSubscriberEmail == null
+                                    ? DecodeDPLRID(rawSubscriber.form_response.hidden.dplrid)  
+                                    : rawSubscriberEmail.email;
+
+            DopplerSubscriberDto dopplerSubscriber = new DopplerSubscriberDto
+            {
+                Email = emailSuscriber
+            };
+                     
             var answersById = rawSubscriber.form_response.answers
                     .Where(x=> String.IsNullOrEmpty(x.email) )
                     .ToDictionary(y => y.field.id);
@@ -228,6 +233,20 @@ namespace Doppler.Integrations.Mapper
                 answerValue = null;
 
             return answerValue;
+        }
+
+        private string DecodeDPLRID(string dplrid)
+        {
+            var rtfBytes = FromHex(dplrid);
+            return Encoding.ASCII.GetString(rtfBytes);
+        }
+
+        public static byte[] FromHex(string hex)
+        {
+            return Enumerable.Range(0, hex.Length)
+                     .Where(x => x % 2 == 0)
+                     .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                     .ToArray();
         }
     }
 }
