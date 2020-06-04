@@ -62,7 +62,8 @@ namespace Doppler.Integrations.Controllers
                 _log.LogError(new EventId(), ex, string.Format("AccountName: {0} | ID_List: {1} | Status: Add subscriber has failed", accountName, idList));
                 return BadRequest(new
                 {
-                    ErrorMessage = "An subscriber email must be provided",
+                    ErrorMessage = ex.Message,
+                    StackTrace = ex.StackTrace,
                     HelpLink = HELP_LINK
                 });
             }
