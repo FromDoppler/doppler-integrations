@@ -39,7 +39,6 @@ namespace Doppler.Integrations.Mapper
 
             var fieldsUpperNameAllowed = allowedFields.Items.Select(i => i.Name.ToUpper()).ToList();
             var fieldsNameAllowed = allowedFields.Items.Select(i => i.Name).ToList();
-
             var fields = new List<CustomFieldDto>();
             var fieldsNotEnabled = new List<string>();
 
@@ -50,20 +49,21 @@ namespace Doppler.Integrations.Mapper
                 {
                     var type = allowedFields.Items[index].Type;
                     var value = entry.Value[0].ToString();
+                    var nameField = GetBasicFieldName(fieldsNameAllowed[index]);
                     if (type == FieldTypes.Boolean.GetDescription())
                     {
                         value = GetBooleanValue(value);
                     }
-                    else if (GENDER_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
+                    else if (GENDER_FIELD_NAMES.Contains(nameField))
                     {
                         value = GetGenderValue(value);
                     }
-                    else if (COUNTRY_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
+                    else if (COUNTRY_FIELD_NAMES.Contains(nameField))
                     {
                         value = GetCountryValue(value);
                     }
 
-                    var newCustomeField = new CustomFieldDto { Name = fieldsNameAllowed[index], Value = value };
+                    var newCustomeField = new CustomFieldDto { Name = nameField, Value = value };
                     fields.Add(newCustomeField);
                 }
                 else
@@ -82,6 +82,16 @@ namespace Doppler.Integrations.Mapper
                 Email = email,
                 Fields = fields
             };
+        }
+
+        public string GetBasicFieldName (string fieldName)
+        {
+            string convertedFieldName;
+            if (!Dictionaries.BasicFieldsNames.TryGetValue(fieldName, out convertedFieldName))
+            {
+                convertedFieldName = fieldName;
+            }
+            return convertedFieldName;
         }
 
         private string GetGenderValue(string genderValue)
