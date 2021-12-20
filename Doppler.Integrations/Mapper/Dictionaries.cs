@@ -299,6 +299,24 @@ namespace Doppler.Integrations.Mapper
             { "dropdown","string"},
             { "opinion_scale","number"}
         };
+
+        public static readonly Dictionary<string, string> BasicFieldsNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            {"nombre","firstname"},
+            {"firstname","firstname"},
+            {"apellido", "lastname"},
+            {"lastname", "lastname"},
+            {"genero", "gender"},
+            {"sex", "gender"},
+            {"sexo", "gender"},
+            {"gender", "gender"},
+            {"pais", "country"},
+            {"country", "country"},
+            {"birthday", "birthday"},
+            {"fecha de nacimiento", "birthday"},
+            {"consent", "consent"},
+            {"consentimiento", "consent"}
+        };
     }
 
 }
