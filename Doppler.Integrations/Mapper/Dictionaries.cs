@@ -302,20 +302,21 @@ namespace Doppler.Integrations.Mapper
 
         public static readonly Dictionary<string, string> BasicFieldsNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            {"nombre","firstname"},
-            {"firstname","firstname"},
-            {"apellido", "lastname"},
-            {"lastname", "lastname"},
-            {"genero", "gender"},
-            {"sex", "gender"},
-            {"sexo", "gender"},
-            {"gender", "gender"},
-            {"pais", "country"},
-            {"country", "country"},
-            {"birthday", "birthday"},
-            {"fecha de nacimiento", "birthday"},
-            {"consent", "consent"},
-            {"consentimiento", "consent"}
+            {"nombre","FIRSTNAME"},
+            {"firstname","FIRSTNAME"},
+            {"apellido", "LASTNAME"},
+            {"lastname", "LASTNAME"},
+            {"genero", "GENDER"},
+            {"sex", "GENDER"},
+            {"sexo", "GENDER"},
+            {"gender", "GENDER"},
+            {"pais", "COUNTRY"},
+            {"country", "COUNTRY"},
+            {"birthday", "BIRTHDAY"},
+            {"fecha_de_nacimiento", "BIRTHDAY"},
+            {"cumpleaños", "BIRTHDAY"},
+            {"consent", "CONSENT"},
+            {"consentimiento", "CONSENT"}
         };
     }
 

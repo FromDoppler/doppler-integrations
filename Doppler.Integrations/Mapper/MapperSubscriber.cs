@@ -44,26 +44,27 @@ namespace Doppler.Integrations.Mapper
 
             foreach (KeyValuePair<string, IList<object>> entry in rawSubscriber)
             {
-                var index = fieldsUpperNameAllowed.IndexOf(entry.Key.ToUpper());
+                var index = fieldsUpperNameAllowed.IndexOf(GetBasicFieldName(entry.Key.ToUpper()));
                 if (index >= 0)
                 {
                     var type = allowedFields.Items[index].Type;
                     var value = entry.Value[0].ToString();
-                    var nameField = GetBasicFieldName(fieldsNameAllowed[index]);
-                    if (type == FieldTypes.Boolean.GetDescription())
+                    var fieldName = fieldsNameAllowed[index];
+
+                    if (type == FieldTypes.Boolean.GetDescription() || type.ToUpper() == "CONSENT")
                     {
                         value = GetBooleanValue(value);
                     }
-                    else if (GENDER_FIELD_NAMES.Contains(nameField))
+                    else if (GENDER_FIELD_NAMES.Contains(fieldName))
                     {
                         value = GetGenderValue(value);
                     }
-                    else if (COUNTRY_FIELD_NAMES.Contains(nameField))
+                    else if (COUNTRY_FIELD_NAMES.Contains(fieldName))
                     {
                         value = GetCountryValue(value);
                     }
 
-                    var newCustomeField = new CustomFieldDto { Name = nameField, Value = value };
+                    var newCustomeField = new CustomFieldDto { Name = fieldName, Value = value };
                     fields.Add(newCustomeField);
                 }
                 else
@@ -86,8 +87,7 @@ namespace Doppler.Integrations.Mapper
 
         public string GetBasicFieldName (string fieldName)
         {
-            string convertedFieldName;
-            if (!Dictionaries.BasicFieldsNames.TryGetValue(fieldName, out convertedFieldName))
+            if (!Dictionaries.BasicFieldsNames.TryGetValue(fieldName, out var convertedFieldName))
             {
                 convertedFieldName = fieldName;
             }
