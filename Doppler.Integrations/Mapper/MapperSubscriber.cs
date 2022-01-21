@@ -39,31 +39,32 @@ namespace Doppler.Integrations.Mapper
 
             var fieldsUpperNameAllowed = allowedFields.Items.Select(i => i.Name.ToUpper()).ToList();
             var fieldsNameAllowed = allowedFields.Items.Select(i => i.Name).ToList();
-
             var fields = new List<CustomFieldDto>();
             var fieldsNotEnabled = new List<string>();
 
             foreach (KeyValuePair<string, IList<object>> entry in rawSubscriber)
             {
-                var index = fieldsUpperNameAllowed.IndexOf(entry.Key.ToUpper());
+                var index = fieldsUpperNameAllowed.IndexOf(GetBasicFieldName(entry.Key.ToUpper()));
                 if (index >= 0)
                 {
                     var type = allowedFields.Items[index].Type;
                     var value = entry.Value[0].ToString();
-                    if (type == FieldTypes.Boolean.GetDescription())
+                    var fieldName = fieldsNameAllowed[index];
+
+                    if (type == FieldTypes.Boolean.GetDescription() || type.ToUpper() == "CONSENT")
                     {
                         value = GetBooleanValue(value);
                     }
-                    else if (GENDER_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
+                    else if (GENDER_FIELD_NAMES.Contains(fieldName))
                     {
                         value = GetGenderValue(value);
                     }
-                    else if (COUNTRY_FIELD_NAMES.Contains(fieldsNameAllowed[index]))
+                    else if (COUNTRY_FIELD_NAMES.Contains(fieldName))
                     {
                         value = GetCountryValue(value);
                     }
 
-                    var newCustomeField = new CustomFieldDto { Name = fieldsNameAllowed[index], Value = value };
+                    var newCustomeField = new CustomFieldDto { Name = fieldName, Value = value };
                     fields.Add(newCustomeField);
                 }
                 else
@@ -82,6 +83,15 @@ namespace Doppler.Integrations.Mapper
                 Email = email,
                 Fields = fields
             };
+        }
+
+        public string GetBasicFieldName (string fieldName)
+        {
+            if (!Dictionaries.BasicFieldsNames.TryGetValue(fieldName, out var convertedFieldName))
+            {
+                convertedFieldName = fieldName;
+            }
+            return convertedFieldName;
         }
 
         private string GetGenderValue(string genderValue)
