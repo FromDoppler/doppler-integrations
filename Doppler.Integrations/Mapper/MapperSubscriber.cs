@@ -17,6 +17,7 @@ namespace Doppler.Integrations.Mapper
         private readonly HashSet<string> GENDER_FIELD_NAMES = new HashSet<string>(new[] { "GENDER", "GENERO", "SEX", "SEXO" }, StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> COUNTRY_FIELD_NAMES = new HashSet<string>(new[] { "PAIS", "COUNTRY" }, StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> BASIC_FIELD_NAMES = new HashSet<string>(new[] { "FIRSTNAME", "GENDER", "COUNTRY", "BIRTHDAY", "LASTNAME" , "CONSENT"}, StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> CONTACT_INFO_FIELD_NAMES = new HashSet<string>(new[] { "First name", "Last name" }, StringComparer.OrdinalIgnoreCase);
 
         public MapperSubscriber(ILogger<MapperSubscriber> log)
         {
@@ -171,6 +172,7 @@ namespace Doppler.Integrations.Mapper
                     var name = GENDER_FIELD_NAMES.Contains(f.@ref) ? "GENDER" 
                         : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? "COUNTRY"
                         : BASIC_FIELD_NAMES.Contains(f.@ref) ? f.@ref.ToUpper()
+                        : CONTACT_INFO_FIELD_NAMES.Contains(f.title) ? f.title.Replace(" ", string.Empty).ToUpper()
                         : f.@ref;
 
                     var questionType = GENDER_FIELD_NAMES.Contains(f.@ref) ? "gender"
