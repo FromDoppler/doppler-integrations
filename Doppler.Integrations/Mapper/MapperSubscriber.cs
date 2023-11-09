@@ -227,6 +227,12 @@ namespace Doppler.Integrations.Mapper
                 answerValue = answer.date;
             else if (answer.choice != null)
                 answerValue = answer.choice.label;
+            else if (answer.choices != null)
+                answerValue = answer.choices.labels.Any()
+                    ? string.Join(", ", answer.choices.labels)
+                    : null;
+            else if (answer.url != null)
+                answerValue = answer.url;
             else
                 answerValue = null;
 

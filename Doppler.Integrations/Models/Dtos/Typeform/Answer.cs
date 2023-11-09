@@ -12,9 +12,11 @@ namespace Doppler.Integrations.Models.Dtos.Typeform
         public Field field { get; set; }
         public string text { get; set; }
         public Choice choice { get; set; }
+        public Choices choices { get; set; }
         public string phone_number { get; set; }
         public bool? boolean { get; set; }
         public int? number { get; set; }
         public string date { get; set; }
+        public string url { get; set; }
     }
 }
