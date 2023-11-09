@@ -155,25 +155,11 @@ namespace Doppler.Integrations.Mapper
 
         public DopplerSubscriberDto TypeFormToSubscriberDTO(TypeformDTO rawSubscriber, ItemsDto allowedFields)
         {
-            var rawSubscriberEmail = rawSubscriber.form_response.answers.FirstOrDefault(x => !string.IsNullOrEmpty(x.email));
-
-            if ((rawSubscriberEmail == null)
-                && string.IsNullOrEmpty(rawSubscriber.form_response.hidden.dplrid))
-            {
-                var responseText = string.Format("The response event: {0} to the form: {1} with ID: {2} has not included an email", rawSubscriber.event_id, rawSubscriber.form_response.definition.title, rawSubscriber.form_response.definition.id);
-                _log.LogWarning(responseText);
-                throw new ArgumentNullException(responseText);
-            }
-
-            var emailSuscriber = rawSubscriberEmail == null
-                                    ? DecodeDPLRID(rawSubscriber.form_response.hidden.dplrid)  
-                                    : rawSubscriberEmail.email;
-
             DopplerSubscriberDto dopplerSubscriber = new DopplerSubscriberDto
             {
-                Email = emailSuscriber
+                Email = GetSubscriberEmail(rawSubscriber)
             };
-                     
+
             var answersById = rawSubscriber.form_response.answers
                     .Where(x=> String.IsNullOrEmpty(x.email) )
                     .ToDictionary(y => y.field.id);
@@ -257,6 +243,23 @@ namespace Doppler.Integrations.Mapper
                      .Where(x => x % 2 == 0)
                      .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                      .ToArray();
+        }
+
+        private string GetSubscriberEmail(TypeformDTO rawSubscriber)
+        {
+            var rawSubscriberEmail = rawSubscriber.form_response.answers.FirstOrDefault(x => !string.IsNullOrEmpty(x.email));
+
+            if ((rawSubscriberEmail == null)
+                && string.IsNullOrEmpty(rawSubscriber.form_response.hidden.dplrid))
+            {
+                var responseText = string.Format("The response event: {0} to the form: {1} with ID: {2} has not included an email", rawSubscriber.event_id, rawSubscriber.form_response.definition.title, rawSubscriber.form_response.definition.id);
+                _log.LogWarning(responseText);
+                throw new ArgumentNullException(responseText);
+            }
+
+            return rawSubscriberEmail == null
+                ? DecodeDPLRID(rawSubscriber.form_response.hidden.dplrid)
+                : rawSubscriberEmail.email;
         }
     }
 }
