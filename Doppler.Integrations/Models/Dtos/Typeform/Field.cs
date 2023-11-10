@@ -8,5 +8,6 @@
         public Properties properties { get; set; }
 
         public string @ref { get; set; }
+        public string title { get; set; }
     }
 }

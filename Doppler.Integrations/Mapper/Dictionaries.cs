@@ -297,7 +297,12 @@ namespace Doppler.Integrations.Mapper
             { "date","date"},
             { "boolean","boolean"},
             { "dropdown","string"},
-            { "opinion_scale","number"}
+            { "opinion_scale","number"},
+            { "long_text","string"},
+            { "rating","number"},
+            { "nps","number"},
+            { "website","string"},
+            { "ranking","string"}
         };
 
         public static readonly Dictionary<string, string> BasicFieldsNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)

@@ -17,6 +17,7 @@ namespace Doppler.Integrations.Mapper
         private readonly HashSet<string> GENDER_FIELD_NAMES = new HashSet<string>(new[] { "GENDER", "GENERO", "SEX", "SEXO" }, StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> COUNTRY_FIELD_NAMES = new HashSet<string>(new[] { "PAIS", "COUNTRY" }, StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> BASIC_FIELD_NAMES = new HashSet<string>(new[] { "FIRSTNAME", "GENDER", "COUNTRY", "BIRTHDAY", "LASTNAME" , "CONSENT"}, StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> CONTACT_INFO_FIELD_NAMES = new HashSet<string>(new[] { "First name", "Last name" }, StringComparer.OrdinalIgnoreCase);
 
         public MapperSubscriber(ILogger<MapperSubscriber> log)
         {
@@ -155,25 +156,11 @@ namespace Doppler.Integrations.Mapper
 
         public DopplerSubscriberDto TypeFormToSubscriberDTO(TypeformDTO rawSubscriber, ItemsDto allowedFields)
         {
-            var rawSubscriberEmail = rawSubscriber.form_response.answers.FirstOrDefault(x => !string.IsNullOrEmpty(x.email));
-
-            if ((rawSubscriberEmail == null)
-                && string.IsNullOrEmpty(rawSubscriber.form_response.hidden.dplrid))
-            {
-                var responseText = string.Format("The response event: {0} to the form: {1} with ID: {2} has not included an email", rawSubscriber.event_id, rawSubscriber.form_response.definition.title, rawSubscriber.form_response.definition.id);
-                _log.LogWarning(responseText);
-                throw new ArgumentNullException(responseText);
-            }
-
-            var emailSuscriber = rawSubscriberEmail == null
-                                    ? DecodeDPLRID(rawSubscriber.form_response.hidden.dplrid)  
-                                    : rawSubscriberEmail.email;
-
             DopplerSubscriberDto dopplerSubscriber = new DopplerSubscriberDto
             {
-                Email = emailSuscriber
+                Email = GetSubscriberEmail(rawSubscriber)
             };
-                     
+
             var answersById = rawSubscriber.form_response.answers
                     .Where(x=> String.IsNullOrEmpty(x.email) )
                     .ToDictionary(y => y.field.id);
@@ -185,6 +172,7 @@ namespace Doppler.Integrations.Mapper
                     var name = GENDER_FIELD_NAMES.Contains(f.@ref) ? "GENDER" 
                         : COUNTRY_FIELD_NAMES.Contains(f.@ref) ? "COUNTRY"
                         : BASIC_FIELD_NAMES.Contains(f.@ref) ? f.@ref.ToUpper()
+                        : CONTACT_INFO_FIELD_NAMES.Contains(f.title) ? f.title.Replace(" ", string.Empty).ToUpper()
                         : f.@ref;
 
                     var questionType = GENDER_FIELD_NAMES.Contains(f.@ref) ? "gender"
@@ -239,6 +227,12 @@ namespace Doppler.Integrations.Mapper
                 answerValue = answer.date;
             else if (answer.choice != null)
                 answerValue = answer.choice.label;
+            else if (answer.choices != null)
+                answerValue = answer.choices.labels.Any()
+                    ? string.Join(", ", answer.choices.labels)
+                    : null;
+            else if (answer.url != null)
+                answerValue = answer.url;
             else
                 answerValue = null;
 
@@ -257,6 +251,23 @@ namespace Doppler.Integrations.Mapper
                      .Where(x => x % 2 == 0)
                      .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                      .ToArray();
+        }
+
+        private string GetSubscriberEmail(TypeformDTO rawSubscriber)
+        {
+            var rawSubscriberEmail = rawSubscriber.form_response.answers.FirstOrDefault(x => !string.IsNullOrEmpty(x.email));
+
+            if ((rawSubscriberEmail == null)
+                && string.IsNullOrEmpty(rawSubscriber.form_response.hidden.dplrid))
+            {
+                var responseText = string.Format("The response event: {0} to the form: {1} with ID: {2} has not included an email", rawSubscriber.event_id, rawSubscriber.form_response.definition.title, rawSubscriber.form_response.definition.id);
+                _log.LogWarning(responseText);
+                throw new ArgumentNullException(responseText);
+            }
+
+            return rawSubscriberEmail == null
+                ? DecodeDPLRID(rawSubscriber.form_response.hidden.dplrid)
+                : rawSubscriberEmail.email;
         }
     }
 }
